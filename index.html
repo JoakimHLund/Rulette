@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Roulette Wheel</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: sans-serif;
+    }
+    #wheelCanvas {
+      border: 2px solid #000;
+      margin-top: 20px;
+    }
+    #spinButton {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="wheelCanvas" width="500" height="500"></canvas>
+  <br>
+  <button id="spinButton">Spin</button>
+
+  <script>
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+    const spinButton = document.getElementById("spinButton");
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    let segments = [];
+    let currentAngle = 0; // in degrees
+    const spinDuration = 5000; // 5 seconds
+    // Colors for segments
+    const colors = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#A133FF", "#33FFF5", "#FFBD33", "#BFFF33"];
+
+    // Load the names.json file (should be in the same directory)
+    fetch('names.json')
+      .then(response => response.json())
+      .then(data => {
+        segments = data;
+        drawWheel();
+      })
+      .catch(error => console.error('Error loading names.json:', error));
+
+    function drawWheel() {
+      const numSegments = segments.length;
+      const anglePerSegment = 360 / numSegments;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw each segment
+      for (let i = 0; i < numSegments; i++) {
+        const startAngle = (i * anglePerSegment + currentAngle) * Math.PI / 180 - Math.PI / 2;
+        const endAngle = ((i + 1) * anglePerSegment + currentAngle) * Math.PI / 180 - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, canvas.width / 2 - 10, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+
+        // Draw the text for the segment
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        const textAngle = (i * anglePerSegment + anglePerSegment / 2 + currentAngle) * Math.PI / 180 - Math.PI / 2;
+        ctx.rotate(textAngle);
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#000";
+        ctx.font = "16px sans-serif";
+        ctx.fillText(segments[i].Name, canvas.width / 2 - 20, 5);
+        ctx.restore();
+      }
+      drawPointer();
+    }
+
+    // Draw a pointer at the top of the wheel
+    function drawPointer() {
+      ctx.fillStyle = "#000";
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY - (canvas.width / 2 - 10));
+      ctx.lineTo(centerX - 20, centerY - (canvas.width / 2 - 10) - 30);
+      ctx.lineTo(centerX + 20, centerY - (canvas.width / 2 - 10) - 30);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    spinButton.addEventListener("click", spinWheel);
+
+    function spinWheel() {
+      spinButton.disabled = true;
+      const numSegments = segments.length;
+      const anglePerSegment = 360 / numSegments;
+
+      // Pick a random winning segment index
+      const winningIndex = Math.floor(Math.random() * numSegments);
+      // Calculate target angle so that the winning segment's middle lands at the pointer (top)
+      let targetAngle = 360 - (winningIndex * anglePerSegment + anglePerSegment / 2);
+      let currentMod = currentAngle % 360;
+      if (currentMod < 0) currentMod += 360;
+      let diff = targetAngle - currentMod;
+      if (diff < 0) diff += 360;
+      const fullSpins = 5; // extra full spins for effect
+      const finalAngle = currentAngle + diff + fullSpins * 360;
+
+      const startTime = performance.now();
+      const startAngle = currentAngle;
+
+      function animate() {
+        const elapsed = performance.now() - startTime;
+        const progress = Math.min(elapsed / spinDuration, 1);
+        // Ease-out cubic for a decelerating effect
+        const easedProgress = 1 - Math.pow(1 - progress, 3);
+        currentAngle = startAngle + (finalAngle - startAngle) * easedProgress;
+        drawWheel();
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          currentAngle = finalAngle; // snap to final angle
+          drawWheel();
+          spinButton.disabled = false;
+          alert("Winner: " + segments[winningIndex].Name);
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+  </script>
+</body>
+</html>
