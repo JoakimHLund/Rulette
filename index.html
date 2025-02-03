@@ -5,23 +5,42 @@
   <title>Roulette Wheel</title>
   <style>
     body {
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       text-align: center;
-      font-family: sans-serif;
+    }
+    #wheelContainer {
+      position: relative;
+      width: 500px;
+      height: 500px;
+      margin: 40px auto;
     }
     #wheelCanvas {
-      border: 2px solid #000;
-      margin-top: 20px;
+      border-radius: 50%;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
     #spinButton {
       margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 12px 30px;
+      font-size: 18px;
+      color: #fff;
+      background-color: #007BFF;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #spinButton:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
-  <canvas id="wheelCanvas" width="500" height="500"></canvas>
-  <br>
+  <div id="wheelContainer">
+    <canvas id="wheelCanvas" width="500" height="500"></canvas>
+  </div>
   <button id="spinButton">Spin</button>
 
   <script>
@@ -50,7 +69,7 @@
       const anglePerSegment = 360 / numSegments;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw each segment
+      // Draw each segment with a flat color fill
       for (let i = 0; i < numSegments; i++) {
         const startAngle = (i * anglePerSegment + currentAngle) * Math.PI / 180 - Math.PI / 2;
         const endAngle = ((i + 1) * anglePerSegment + currentAngle) * Math.PI / 180 - Math.PI / 2;
@@ -67,9 +86,9 @@
         const textAngle = (i * anglePerSegment + anglePerSegment / 2 + currentAngle) * Math.PI / 180 - Math.PI / 2;
         ctx.rotate(textAngle);
         ctx.textAlign = "right";
-        ctx.fillStyle = "#000";
-        ctx.font = "16px sans-serif";
-        ctx.fillText(segments[i].Name, canvas.width / 2 - 20, 5);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 16px sans-serif";
+        ctx.fillText(segments[i].Name, canvas.width / 2 - 20, 8);
         ctx.restore();
       }
       drawPointer();
@@ -77,7 +96,7 @@
 
     // Draw a pointer at the top of the wheel
     function drawPointer() {
-      ctx.fillStyle = "#000";
+      ctx.fillStyle = "#333";
       ctx.beginPath();
       ctx.moveTo(centerX, centerY - (canvas.width / 2 - 10));
       ctx.lineTo(centerX - 20, centerY - (canvas.width / 2 - 10) - 30);
